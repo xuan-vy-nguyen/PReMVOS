@@ -1,5 +1,5 @@
 {
-"image_input_dir":"../data/DAVIS/JPEGImages/480p/",
+"image_input_dir":"../data/test_all_frames/JPEGImages/",
 "bb_input_dir":"../output/intermediate/refined_proposals/",
 "output_dir":"../output/intermediate/ReID_proposals/",
 
