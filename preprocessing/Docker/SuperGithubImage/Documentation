@@ -1,0 +1,31 @@
+How to use:
+    Firstly, to install Docker on your computer, run install.sh
+    Secondly, to build image, run build.sh
+    Thirdly, to run container, run run.sh
+
+How to config:
+    command: 
+        FROM <>   
+                use default images which downloads on dockerhub.com
+        RUN  <>   
+                write terminal command in <> and use it to cd, cp, ... or install packages you need.
+        ENV  <PATH=$CONDA_PREFIX/bin:$PATH>
+                set enviroment variables, all things in <...> is an examples
+        ADD <A> <B>
+                copy all things in folder <A> (in PC, should set absolute path to a folders) 
+                to folder <B> (in docker)
+        CMD [<python>,<A.py>,<...>]
+                when you run container, those files will exec first.
+        If you want to use some thing rooting system, you need put them before I created a non-root user and switch to it
+
+Something when INSTALL new packages
+        Sometime, we cannot run 'RUN apt-get update' or 'RUN apt-get install' , just run 'RUN apt-get update && apt-get install'
+        Because we can not 'yes' when sofware ask for agreemention, so we need 'RUN apt-get install -y <packages>'
+
+To connect inside docker
+        Instead the container is running, you cannot access to container 
+        docker ps       
+                List all containers is running
+        docker ps -a
+                List all dockers evenwhen those stop
+        docker exec <name> 

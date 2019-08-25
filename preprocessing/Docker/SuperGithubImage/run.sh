@@ -1,0 +1,1 @@
+docker run -d premvos:0.1  

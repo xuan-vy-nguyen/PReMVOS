@@ -1,0 +1,1 @@
+docker build --tag=premvos:0.1 .

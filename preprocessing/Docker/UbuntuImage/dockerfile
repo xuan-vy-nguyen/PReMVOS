@@ -1,0 +1,48 @@
+FROM ubuntu:18.04
+
+# install basePackages
+RUN apt-get update && apt-get install -y apt-transport-https
+RUN apt-get install -y git -y wget -y curl -y gcc -y build-essential
+# install CUDA
+# RUN wget https://developer.nvidia.com/compute/cuda/8.0/Prod2/local_installers/cuda_8.0.61_375.26_linux-run
+# RUN ls
+# RUN sh cuda_8.0.61_375.26_linux-run
+
+# install conda
+RUN cd /home
+RUN curl -O https://repo.anaconda.com/archive/Anaconda3-2019.03-Linux-x86_64.sh
+RUN sha256sum Anaconda3-2019.03-Linux-x86_64.sh
+RUN bash Anaconda3-2019.03-Linux-x86_64.sh -b
+
+# activate enviroment baseEnv
+RUN conda create --name baseEnv 
+RUN conda activate baseEnv
+
+# installing packages in /root
+# + installing tensorpack
+RUN git clone https://github.com/ppwwyyxx/tensorpack /root/vision/tensorpack/
+RUN cd /root/vision/tensorpack/ && git checkout 6fdde15deac4f23eb31ffef9e8d405d9153a51cd
+# + installing cocoapi
+RUN cd /root
+RUN git clone https://github.com/cocodataset/cocoapi
+RUN cd cocoapi/PythonAPI && make
+# + set env path
+ENV PYTHONPATH ":/root/vision/tensorpack/:/content/cocoapi/PythonAPI/"
+ENV USER ""
+# + installing pip packages
+RUN pip install termcolor tqdm tabulate opencv-python msgpack_numpy scipy==1.1.0 
+
+# enviroment variable to run general proposals, special proposals, combined proposals
+ENV PYTHONPATH ":/root/vision/tensorpack/:/content/cocoapi/PythonAPI/"
+ENV USER ""
+
+# enviroment variable to run refinement proposals and reid proposals
+ENV PYTHONPATH "${PYTHONPATH}:/content/PReMVOS/code:/content/PReMVOS/code/refinement_net"
+
+
+
+# workspace
+WORKDIR /app
+COPY . /app
+
+

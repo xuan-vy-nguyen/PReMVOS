@@ -1,0 +1,31 @@
+# using cuda 8.0 images 
+FROM kaixhin/cuda-theano
+RUN apt-get update && apt-get install -y apt-transport-https
+# adding wget and bzip2
+RUN apt-get install -y wget bzip2
+# Anaconda installing
+RUN wget https://repo.continuum.io/archive/Anaconda3-5.0.1-Linux-x86_64.sh
+RUN bash Anaconda3-5.0.1-Linux-x86_64.sh -b
+RUN rm Anaconda3-5.0.1-Linux-x86_64.sh
+# Set path to conda
+ENV PATH /root/anaconda3/bin:$PATH
+# Updating Anaconda packages
+RUN conda update conda
+RUN conda update anaconda
+RUN conda update --all
+# installing cuda
+# using home which contain packages
+RUN cd /home
+# installing packages
+# + installing tensorpack
+RUN git clone https://github.com/ppwwyyxx/tensorpack /root/vision/tensorpack/
+RUN cd /root/vision/tensorpack/ && git checkout 6fdde15deac4f23eb31ffef9e8d405d9153a51cd
+# + installing cocoapi
+RUN git clone https://github.com/cocodataset/cocoapi
+RUN cd cocoapi/PythonAPI && make
+# + set env path
+ENV PYTHONPATH ":/root/vision/tensorpack/:/content/cocoapi/PythonAPI/"
+ENV USER ""
+# adding folder & using workspace in /app 
+ADD . /app
+WORKDIR /app

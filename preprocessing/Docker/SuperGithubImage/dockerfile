@@ -1,0 +1,93 @@
+  
+FROM nvidia/cuda:8.0-cudnn7-devel-ubuntu16.04
+
+# Install curl and sudo
+RUN apt-get update && apt-get install -y \
+    curl \
+    ca-certificates \
+    sudo \
+ && rm -rf /var/lib/apt/lists/*
+
+# Use Tini as the init process with PID 1
+RUN curl -Lso /tini https://github.com/krallin/tini/releases/download/v0.14.0/tini \
+ && chmod +x /tini
+ENTRYPOINT ["/tini", "--"]
+
+# Create a working directory
+RUN mkdir /app
+WORKDIR /app
+
+# Install Git, bzip2, and X11 client
+RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+    git \
+    bzip2 \
+    libx11-6 \
+ && sudo rm -rf /var/lib/apt/lists/*
+
+# Install Miniconda
+RUN curl -so ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-4.3.14-Linux-x86_64.sh \
+ && chmod +x ~/miniconda.sh \
+ && ~/miniconda.sh -b -p ~/miniconda \
+ && rm ~/miniconda.sh
+
+# Create a Python 3.6 environment
+RUN /root/miniconda/bin/conda create -y --name pytorch-py36 \
+ && /root/miniconda/bin/conda clean -ya
+ENV PATH=/root/miniconda/envs/pytorch-py36/bin:$PATH \
+    CONDA_DEFAULT_ENV=pytorch-py36 \
+    CONDA_PREFIX=/root/miniconda/envs/pytorch-py36
+
+# CUDA 8.0-specific steps
+RUN conda install -y --name pytorch-py36 -c soumith \
+    magma-cuda80 \
+ && conda clean -ya
+
+# Install PyTorch and Torchvision
+RUN conda install -y --name pytorch-py36 -c soumith \
+    pytorch=0.2.0 torchvision=0.1.9 \
+ && conda clean -ya
+
+# Install HDF5 Python bindings
+RUN conda install -y --name pytorch-py36 \
+    h5py \
+ && conda clean -ya
+RUN pip install h5py-cache
+
+# Install Torchnet, a high-level framework for PyTorch
+RUN pip install git+https://github.com/pytorch/tnt.git@master
+
+# installing git
+RUN sudo apt-get install git
+# installing packages in /$HOME
+ENV HOME /app
+# + installing tensorpack
+RUN git clone https://github.com/ppwwyyxx/tensorpack /$HOME/vision/tensorpack/
+RUN cd /$HOME/vision/tensorpack/ && git checkout 6fdde15deac4f23eb31ffef9e8d405d9153a51cd
+
+# + set env path
+ENV PYTHONPATH ":/$HOME/vision/tensorpack/:/$HOME/cocoapi/PythonAPI/:/$HOME/vision/tensorpack/:/$HOME/cocoapi/PythonAPI/:/$HOME/PReMVOS/code:/$HOME/PReMVOS/code/refinement_net"
+ENV USER "user"
+# + installing conda packages
+RUN pip install termcolor tqdm tabulate 
+RUN pip install opencv-python msgpack_numpy 
+RUN pip install scipy==1.1.0 
+
+# add PReMVOS to app
+RUN cd $HOME 
+RUN ls $HOME
+RUN git clone https://github.com/JonathonLuiten/PReMVOS.git
+
+# + package in optical_flow_net
+RUN cd $HOME/PReMVOS/code/optical_flow_net-PWC-Net/external_packages/correlation-pytorch-master && conda install cffi
+# run make_cuda.sh in optical flow net
+RUN cd $HOME/PReMVOS/code/optical_flow_net-PWC-Net/external_packages/correlation-pytorch-master && chmod +x ./make_cuda.sh && sh make_cuda.sh
+RUN python setup.py build install
+
+# + installing cocoapi
+RUN cd $HOME
+RUN git clone https://github.com/cocodataset/cocoapi
+RUN cd cocoapi/PythonAPI && make
+
+# return PReMVOS
+RUN cd /$HOME/PReMVOS
+CMD ["sh", "simle_run.sh"]
