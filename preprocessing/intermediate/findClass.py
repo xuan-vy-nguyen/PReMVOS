@@ -1,6 +1,6 @@
 import json
 
-CLASS1 = ['leopard']
+CLASS = ['leopard']
 CLASS2= ['parrot']
 
 with open('meta.json') as f:

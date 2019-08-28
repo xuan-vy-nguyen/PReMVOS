@@ -1,0 +1,10 @@
+input:
+    image
+    
+output:
+
+method:
+
+question:
+    - what is TF_CUDNN_USE_AUTOTUNE?
+        tensor flow and cuda were using for autotune
